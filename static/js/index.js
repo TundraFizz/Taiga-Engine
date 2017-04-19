@@ -6,13 +6,13 @@ function init() {
     {view:document.getElementById("game-canvas")}
   );
 
-  var farTexture = PIXI.Texture.fromImage("bg-far.png");
+  var farTexture = PIXI.Texture.fromImage("js/game/bg-far.png");
   far = new PIXI.Sprite(farTexture);
   far.position.x = 0;
   far.position.y = 0;
   stage.addChild(far);
 
-  var midTexture = PIXI.Texture.fromImage("bg-mid.png");
+  var midTexture = PIXI.Texture.fromImage("js/game/bg-mid.png");
   mid = new PIXI.Sprite(midTexture);
   mid.position.x = 0;
   mid.position.y = 128;
