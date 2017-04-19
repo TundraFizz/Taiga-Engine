@@ -16,6 +16,7 @@ var TaiScene = function( stage )
 {
   this.stage = stage;
   this.entities = [];
+  this.lastMsec = performance.now();
   this.CreateEntity = function( position, velocity, texture )
   {
     sprite = new PIXI.Sprite( texture );
@@ -29,6 +30,18 @@ var TaiScene = function( stage )
     this.entities.push( entity );
     return entity;
   }
+  this.Frame = function()
+  {
+    var currMsec = performance.now();
+    var deltaSecs = ( currMsec - this.lastMsec ) / 1000;
+    this.lastMsec = currMsec;
+    for( let entity of this.entities )
+    {
+      entity.sprite.position = PIXIPointAdd(
+        entity.sprite.position,
+        PIXIPointScale( entity.velocity, deltaSecs ) );
+    }
+  }
 }
 
 var TaiEntity = function( texture )
@@ -39,8 +52,6 @@ var sean;
 var shawn;
 var shayn;
 var shane;
-
-var lastMsec;
 
 function init() {
   stage = new PIXI.Container();
@@ -69,23 +80,14 @@ function init() {
     midTexture );
 
   requestAnimationFrame(update);
-  lastMsec = performance.now();
 }
 
-var lastMsec = null;
 
 function update() {
-  var currMsec = performance.now();
-  var deltaSecs = ( currMsec - lastMsec ) / 1000;
-  for( let entity of sean.entities )
-  {
-    entity.sprite.position = PIXIPointAdd(
-      entity.sprite.position,
-      PIXIPointScale( entity.velocity, deltaSecs ) );
-  }
+
+  sean.Frame();
 
   renderer.render(stage);
 
-  lastMsec = currMsec;
   requestAnimationFrame(update);
 }
