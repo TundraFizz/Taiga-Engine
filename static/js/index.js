@@ -36,20 +36,76 @@ function update(){
 
 // ------------------------------------------------------------
 
-$(document).ready(function(){Init();});
 
+function Taiga(){}
 
-function Init(){
-  var app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
-  $("body").prepend(app.view);
+Taiga.prototype.Initialize = function(){
+  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  $("body").prepend(this.app.view);
 
-  // create a texture from an image path
-  var texture = PIXI.Texture.fromImage("sprite.png");
+  this.LoadTextures();
+  this.CreateBunny();
+}
 
+Taiga.prototype.LoadTextures = function(){
+  this.textures = [];
+  this.textures.push(PIXI.Texture.fromImage("sprite.png"));
+}
 
+var keyContainer = {};
 
+$(document).keydown(function(event){
+  keyContainer[event.key] = true;
+  console.log(keyContainer);
+});
 
+$(document).keyup(function(event){
+  delete keyContainer[event.key];
+  console.log(keyContainer);
+});
 
+Taiga.prototype.CreateBunny = function(){
+  var bunny = new PIXI.Sprite(this.textures[0]);
+  bunny.interactive = true; // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
+  bunny.buttonMode = true;  // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
+  bunny.anchor.set(0.5);    // center the bunny's anchor point
+  bunny.scale.set(1);       // make it a bit bigger, so it's easier to grab
+
+  // Time to setup the events
+  // bunny
+  //     .on('pointerdown', onDragStart)
+  //     .on('pointerup', onDragEnd)
+  //     .on('pointerupoutside', onDragEnd)
+  //     .on('pointermove', onDragMove);
+
+      // For mouse-only events
+      // .on('mousedown', onDragStart)
+      // .on('mouseup', onDragEnd)
+      // .on('mouseupoutside', onDragEnd)
+      // .on('mousemove', onDragMove);
+
+      // For touch-only events
+      // .on('touchstart', onDragStart)
+      // .on('touchend', onDragEnd)
+      // .on('touchendoutside', onDragEnd)
+      // .on('touchmove', onDragMove);
+
+  // move the sprite to its designated position
+  bunny.x = 200;
+  bunny.y = 100;
+  // bunny.x = x;
+  // bunny.y = y;
+
+  // add it to the stage
+  this.app.stage.addChild(bunny);
+}
+
+$(document).ready(function(){
+  var taiga = new Taiga();
+  taiga.Initialize();
+});
+
+function Bunny(){
   // create our little bunny friend..
   var bunny = new PIXI.Sprite(texture);
 
@@ -86,11 +142,21 @@ function Init(){
       // .on('touchmove', onDragMove);
 
   // move the sprite to its designated position
-  bunny.x = x;
-  bunny.y = y;
+  // bunny.x = x;
+  // bunny.y = y;
 
   // add it to the stage
   app.stage.addChild(bunny);
+}
+
+function Init(){
+  var app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  $("body").prepend(app.view);
+
+  // create a texture from an image path
+  var texture = PIXI.Texture.fromImage("sprite.png");
+
+
 
 
 
@@ -105,10 +171,10 @@ function Init(){
   // Scale mode for pixelation
   // texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
 
-  mid = new PIXI.Sprite(texture);
-  mid.position.x = 0;
-  mid.position.y = 128;
-  app.addChild(mid);
+  // mid = new PIXI.Sprite(texture);
+  // mid.position.x = 0;
+  // mid.position.y = 128;
+  // app.addChild(mid);
 
   // for (var i = 0; i < 10; i++) {
   //   createBunny(
