@@ -48,6 +48,7 @@ $(document).keyup(function(e){
 function Taiga(){}
 
 Taiga.prototype.Initialize = function(){
+  var self             = this;
   this.textures        = {};
   this.objectContainer = [];
   this.objects         = {};
@@ -56,7 +57,7 @@ Taiga.prototype.Initialize = function(){
   this.scalar          = 1;
   this.runningIndex    = 0;
 
-  this.app = new PIXI.Application(this.screenWidth, this.screenHeight, {backgroundColor : 0xff8888});
+  this.app = new PIXI.Application(this.screenWidth, this.screenHeight, {backgroundColor : 0x00ffff});
   $("body").prepend(this.app.view);
 
   this.LoadTextures();
@@ -71,12 +72,22 @@ Taiga.prototype.Initialize = function(){
   this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
   this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
+  $(document).mousedown(function(e){
+    self.ShootBullet();
+  });
+
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
 Taiga.prototype.LoadTextures = function(){
   this.LoadTexture("planet.png");
   this.LoadTexture("player.png");
+  this.LoadTexture("bullet.png");
+  this.LoadTexture("run0.png");
+  this.LoadTexture("run1.png");
+  this.LoadTexture("run2.png");
+  this.LoadTexture("run3.png");
+  this.LoadTexture("run4.png");
   this.LoadTexture("enemy1.png");
   this.LoadTexture("enemy2.png");
   this.LoadTexture("enemy3.png");
@@ -85,11 +96,6 @@ Taiga.prototype.LoadTextures = function(){
   this.LoadTexture("enemy6.png");
   this.LoadTexture("enemy7.png");
   this.LoadTexture("enemy8.png");
-  this.LoadTexture("run0.png");
-  this.LoadTexture("run1.png");
-  this.LoadTexture("run2.png");
-  this.LoadTexture("run3.png");
-  this.LoadTexture("run4.png");
 }
 
 Taiga.prototype.LoadTexture = function(textureName){
@@ -106,26 +112,6 @@ Taiga.prototype.CreatePlanet = function(){
   // move the sprite to its designated position
   object.x = 0;
   object.y = 0;
-
-  // Time to setup the events
-  // object
-  //     .on('pointerdown', onDragStart)
-  //     .on('pointerup', onDragEnd)
-  //     .on('pointerupoutside', onDragEnd)
-  //     .on('pointermove', onDragMove);
-
-      // For mouse-only events
-      // .on('mousedown', onDragStart)
-      // .on('mouseup', onDragEnd)
-      // .on('mouseupoutside', onDragEnd)
-      // .on('mousemove', onDragMove);
-
-      // For touch-only events
-      // .on('touchstart', onDragStart)
-      // .on('touchend', onDragEnd)
-      // .on('touchendoutside', onDragEnd)
-      // .on('touchmove', onDragMove);
-
 
   // Add to the stage
   this.objectContainer.push(object);
@@ -149,6 +135,23 @@ Taiga.prototype.CreatePlayer = function(){
   this.objects["player"] = object;
 }
 
+Taiga.prototype.ShootBullet = function(){
+  var object = new PIXI.Sprite(this.textures["bullet.png"]);
+
+  object.interactive = false; // Allow object to respond to mouse and touch events
+  object.buttonMode  = false; // If the hand cursor appears when you mouse over
+  object.anchor.set(0.5);     // Center the anchor point
+  object.scale.set(1);        // Scale
+
+  // move the sprite to its designated position
+  object.x = this.objects["player"].x;
+  object.y = this.objects["player"].y;
+
+  this.objectContainer.push(object);
+  this.app.stage.addChild(object);
+  // this.objects["player"] = object;
+}
+
 Taiga.prototype.CreateEnemy = function(tex, scale, x, y){
   // var object = new PIXI.Sprite(this.textures["planet.png"]);
   var object = new PIXI.Sprite(this.textures[tex]);
@@ -168,8 +171,9 @@ Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  if(typeof keys["ArrowRight"] === "undefined" && this.runningIndex > 0){
-    // this.runningIndex = 0;
+  if(typeof keys["ArrowLeft"] === "undefined" && typeof keys["ArrowRight"] === "undefined"){
+    this.runningIndex = 0;
+    this.objects["player"].setTexture(this.textures[`player.png`]);
   }
 
   if(keys["ArrowLeft"]){
@@ -200,27 +204,3 @@ $(document).ready(function(){
   var taiga = new Taiga();
   taiga.Initialize();
 });
-
-function onDragStart(event) {
-    // store a reference to the data
-    // the reason for this is because of multitouch
-    // we want to track the movement of this particular touch
-    this.data = event.data;
-    this.alpha = 0.5;
-    this.dragging = true;
-}
-
-function onDragEnd() {
-    this.alpha = 1;
-    this.dragging = false;
-    // set the interaction data to null
-    this.data = null;
-}
-
-function onDragMove() {
-    if (this.dragging) {
-        var newPosition = this.data.getLocalPosition(this.parent);
-        this.x = newPosition.x;
-        this.y = newPosition.y;
-    }
-}
