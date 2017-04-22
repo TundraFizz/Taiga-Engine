@@ -1,255 +1,242 @@
-/*
+//
+// TaiVec2D
+//
 
-function init(){
-  stage = new PIXI.Container();
-  renderer = PIXI.autoDetectRenderer(
-    512,
-    384,
-    {view:document.getElementById("game-canvas")}
-  );
-
-  var farTexture = PIXI.Texture.fromImage("js/game/bg-far.png");
-  far = new PIXI.Sprite(farTexture);
-  far.position.x = 0;
-  far.position.y = 0;
-  stage.addChild(far);
-
-  var midTexture = PIXI.Texture.fromImage("js/game/bg-mid.png");
-  mid = new PIXI.Sprite(midTexture);
-  mid.position.x = 0;
-  mid.position.y = 128;
-  stage.addChild(mid);
-
-  requestAnimationFrame(update);
+function TaiVec2D( x, y ){
+  this.x = x;
+  this.y = y;
 }
 
-function update(){
-  far.position.x -= 0.128;
-  mid.position.x -= 0.64;
-
-  renderer.render(stage);
-
-  requestAnimationFrame(update);
+function TaiVec2DAdd( vec0, vec1 ){
+  return new TaiVec2D(
+    vec0.x + vec1.x,
+    vec0.y + vec1.y );
 }
 
-*/
+function TaiVec2DScale( vec, scale )
+{
+  return new TaiVec2D(
+    vec.x * scale,
+    vec.y * scale );
+}
 
-// ------------------------------------------------------------
+//
+// Tai Math <--> PIXI Math interface
+//
 
-var keyContainer = {};
-var objectContainer = [];
+function TaiVec2DToPixiPoint( taiVec )
+{
+  return new PIXI.Point( taiVec.x, taiVec.y );
+}
 
-$(document).keydown(function(event){
-  keyContainer[event.key] = true;
-  console.log(keyContainer);
+//
+// TaiGraphics
+//
+
+function TaiGraphics( pixiStage, pixiRenderer ){
+  this.drawables = [];
+  this.pixiStage = pixiStage;
+  this.pixiRenderer = pixiRenderer;
+}
+
+TaiGraphics.prototype.SpawnDrawable = function( pixiTexture ){
+  var drawable = new TaiDrawable( this.pixiStage, pixiTexture );
+  this.drawables.push( drawable );
+  return drawable;
+}
+
+TaiGraphics.prototype.Update = function(){
+  // TODO: Compute the pixel coordinates based on
+  // - camera pos/orientatoin
+  // - entity's world coords
+  // ( For now, treat world coords as pixel coords )
+  for( let drawable of this.drawables ){
+    pixiSprite = drawable.pixiSprite;
+    pixiSprite.position = TaiVec2DToPixiPoint( drawable.entity.position );
+  }
+}
+
+//
+// TaiDrawable
+//
+
+function TaiDrawable( pixiStage, pixiTexture ){
+  var pixiSprite = new PIXI.Sprite( pixiTexture );
+  pixiSprite.position = new PIXI.Point( 0, 0 );
+  pixiSprite.interactive = false; // Allow object to respond to mouse and touch events
+  pixiSprite.buttonMode  = false; // If the hand cursor appears when you mouse over
+  pixiSprite.anchor.set(0.5);     // Center the anchor point
+  pixiSprite.scale.set(1);        // Scale
+  pixiStage.addChild( pixiSprite );
+  this.pixiSprite = pixiSprite;
+  this.componentName = "Drawable";
+}
+
+//
+// TaiEntity
+//
+
+function TaiEntity(){
+  this.position = new TaiVec2D( 0, 0 );
+  this.components = [];
+}
+
+// Debug stuff: Press the + and - keys to zoom in and out
+var keys = {};
+$(document).keydown(function(e){
+  keys[e.key] = true;
+});
+$(document).keyup(function(e){
+  delete keys[e.key];
 });
 
-$(document).keyup(function(event){
-  delete keyContainer[event.key];
-  console.log(keyContainer);
-});
+TaiEntity.prototype.GetComponent = function( componentName ){
+  for( let component of this.components ){
+    if( component.componentName == componentName ){
+      return component;
+    }
+  }
+}
 
-function Taiga(){}
+TaiEntity.prototype.AddComponent = function( component ){
+  this.components.push( component ); 
+  component.entity = this;
+}
 
-Taiga.prototype.Initialize = function(){
-  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+//
+// Taiga
+//
+
+function Taiga(){
+  this.textures        = {};
+  this.objectContainer = [];
+  this.objects         = {};
+  this.screenWidth     = 800;
+  this.screenHeight    = 600;
+  this.scalar          = 1;
+  this.runningIndex    = 0;
+  this.app = new PIXI.Application(
+    this.screenWidth,
+    this.screenHeight,
+    {backgroundColor : 0xff8888});
   $("body").prepend(this.app.view);
 
+  this.objectContainer = [];
+
+  // Create systems
+  this.graphics = new TaiGraphics( this.app.stage, this.app.renderer );
+
+  // Populate scene
   this.LoadTextures();
-  this.CreateBunny();
+  this.CreatePlanet();
+  this.CreatePlayer();
+  this.CreateEnemy("enemy1.png", 0.25, -200,  -200);
+  this.CreateEnemy("enemy2.png", 0.5,  -350,  -350);
+  this.CreateEnemy("enemy3.png", 1.0,  -700,  -700);
+  this.CreateEnemy("enemy4.png", 2.0,  -1200, -1200);
+  this.CreateEnemy("enemy5.png", 4.0,  -2500, -2500);
+  this.CreateEnemy("enemy6.png", 6.0,  -4000, -4000);
+  this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
+  this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
   window.requestAnimationFrame(this.Update.bind(this));
+}
+
+Taiga.prototype.CreateEntity = function(){
+  var entity = new TaiEntity();
+  this.objectContainer.push( entity );
+  return entity;
+}
+
+Taiga.prototype.LoadTextures = function(){
+  this.LoadTexture("planet.png");
+  this.LoadTexture("player.png");
+  this.LoadTexture("enemy1.png");
+  this.LoadTexture("enemy2.png");
+  this.LoadTexture("enemy3.png");
+  this.LoadTexture("enemy4.png");
+  this.LoadTexture("enemy5.png");
+  this.LoadTexture("enemy6.png");
+  this.LoadTexture("enemy7.png");
+  this.LoadTexture("enemy8.png");
+  this.LoadTexture("run0.png");
+  this.LoadTexture("run1.png");
+  this.LoadTexture("run2.png");
+  this.LoadTexture("run3.png");
+  this.LoadTexture("run4.png");
+}
+
+Taiga.prototype.LoadTexture = function(textureName){
+  this.textures[textureName] = PIXI.Texture.fromImage(textureName);
+}
+
+Taiga.prototype.CreatePlanet = function(){
+  var texture = this.textures["planet.png"];
+  var drawable = this.graphics.SpawnDrawable( texture );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = 0;
+  entity.position.y = 0;
+}
+
+Taiga.prototype.CreatePlayer = function(){
+  var texture = this.textures["player.png"];
+  var drawable = this.graphics.SpawnDrawable( texture );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = 0;
+  entity.position.y = 0;
+  this.objects["player"] = entity;
+}
+
+Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
+  var texture = this.textures[textureName];
+  var drawable = this.graphics.SpawnDrawable( texture );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = x;
+  entity.position.y = y;
+  drawable.pixiSprite.scale.set( scale );
 }
 
 Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
-  this.then = time;
-  // console.log(this.delta);
+  this.then  = time;
+
+  if(typeof keys["ArrowRight"] === "undefined" && this.runningIndex > 0){
+    // this.runningIndex = 0;
+  }
+
+  var player = this.objects["player"];
+  var drawable = player.GetComponent( "Drawable" );
+  var pixiSprite = drawable.pixiSprite;
+
+  if(keys["ArrowLeft"]){
+    pixiSprite.rotation -= 0.04;
+    pixiSprite.scale.x = -1;
+    pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
+    if(this.runningIndex == 5)
+      this.runningIndex = 0;
+  }else if(keys["ArrowRight"]){
+    pixiSprite.rotation += 0.04;
+    pixiSprite.scale.x = 1;
+    pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
+    if(this.runningIndex == 5)
+      this.runningIndex = 0;
+  }
+
+  this.app.stage.position.x = this.screenWidth/2;
+  this.app.stage.position.y = this.screenHeight/2;
+
+  // Game logic
+  // for(var i = 0; i < objectContainer.length; i++){
+  // }
+
+  this.graphics.Update();
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
-Taiga.prototype.LoadTextures = function(){
-  this.textures = [];
-  this.textures.push(PIXI.Texture.fromImage("sprite.png"));
-}
-
-Taiga.prototype.CreateBunny = function(){
-  var bunny = new PIXI.Sprite(this.textures[0]);
-  bunny.interactive = true; // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
-  bunny.buttonMode = true;  // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
-  bunny.anchor.set(0.5);    // center the bunny's anchor point
-  bunny.scale.set(1);       // make it a bit bigger, so it's easier to grab
-
-  // Time to setup the events
-  // bunny
-  //     .on('pointerdown', onDragStart)
-  //     .on('pointerup', onDragEnd)
-  //     .on('pointerupoutside', onDragEnd)
-  //     .on('pointermove', onDragMove);
-
-      // For mouse-only events
-      // .on('mousedown', onDragStart)
-      // .on('mouseup', onDragEnd)
-      // .on('mouseupoutside', onDragEnd)
-      // .on('mousemove', onDragMove);
-
-      // For touch-only events
-      // .on('touchstart', onDragStart)
-      // .on('touchend', onDragEnd)
-      // .on('touchendoutside', onDragEnd)
-      // .on('touchmove', onDragMove);
-
-  // move the sprite to its designated position
-  bunny.x = 200;
-  bunny.y = 100;
-  // bunny.x = x;
-  // bunny.y = y;
-
-  objectContainer.push(bunny);
-
-  // add it to the stage
-  this.app.stage.addChild(bunny);
-}
-
 $(document).ready(function(){
-  var taiga = new Taiga();
-  taiga.Initialize();
+  new Taiga();
 });
 
-function Bunny(){
-  // create our little bunny friend..
-  var bunny = new PIXI.Sprite(texture);
-
-  // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
-  bunny.interactive = true;
-
-  // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
-  bunny.buttonMode = true;
-
-  // center the bunny's anchor point
-  bunny.anchor.set(0.5);
-
-  // make it a bit bigger, so it's easier to grab
-  bunny.scale.set(3);
-
-  // setup events for mouse + touch using
-  // the pointer events
-  bunny
-      .on('pointerdown', onDragStart)
-      .on('pointerup', onDragEnd)
-      .on('pointerupoutside', onDragEnd)
-      .on('pointermove', onDragMove);
-
-      // For mouse-only events
-      // .on('mousedown', onDragStart)
-      // .on('mouseup', onDragEnd)
-      // .on('mouseupoutside', onDragEnd)
-      // .on('mousemove', onDragMove);
-
-      // For touch-only events
-      // .on('touchstart', onDragStart)
-      // .on('touchend', onDragEnd)
-      // .on('touchendoutside', onDragEnd)
-      // .on('touchmove', onDragMove);
-
-  // move the sprite to its designated position
-  // bunny.x = x;
-  // bunny.y = y;
-
-  // add it to the stage
-  app.stage.addChild(bunny);
-}
-
-function Init(){
-  var app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
-  $("body").prepend(app.view);
-
-  // create a texture from an image path
-  var texture = PIXI.Texture.fromImage("sprite.png");
-
-
-
-  // Scale mode for pixelation
-  // texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-
-  // mid = new PIXI.Sprite(texture);
-  // mid.position.x = 0;
-  // mid.position.y = 128;
-  // app.addChild(mid);
-
-  // for (var i = 0; i < 10; i++) {
-  //   createBunny(
-  //       Math.floor(Math.random() * app.renderer.width),
-  //       Math.floor(Math.random() * app.renderer.height)
-  //   );
-  // }
-}
-
-function createBunny(x, y) {
-
-    // create our little bunny friend..
-    var bunny = new PIXI.Sprite(texture);
-
-    // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
-    bunny.interactive = true;
-
-    // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
-    bunny.buttonMode = true;
-
-    // center the bunny's anchor point
-    bunny.anchor.set(0.5);
-
-    // make it a bit bigger, so it's easier to grab
-    bunny.scale.set(3);
-
-    // setup events for mouse + touch using
-    // the pointer events
-    bunny
-        .on('pointerdown', onDragStart)
-        .on('pointerup', onDragEnd)
-        .on('pointerupoutside', onDragEnd)
-        .on('pointermove', onDragMove);
-
-        // For mouse-only events
-        // .on('mousedown', onDragStart)
-        // .on('mouseup', onDragEnd)
-        // .on('mouseupoutside', onDragEnd)
-        // .on('mousemove', onDragMove);
-
-        // For touch-only events
-        // .on('touchstart', onDragStart)
-        // .on('touchend', onDragEnd)
-        // .on('touchendoutside', onDragEnd)
-        // .on('touchmove', onDragMove);
-
-    // move the sprite to its designated position
-    bunny.x = x;
-    bunny.y = y;
-
-    // add it to the stage
-    app.stage.addChild(bunny);
-}
-
-function onDragStart(event) {
-    // store a reference to the data
-    // the reason for this is because of multitouch
-    // we want to track the movement of this particular touch
-    this.data = event.data;
-    this.alpha = 0.5;
-    this.dragging = true;
-}
-
-function onDragEnd() {
-    this.alpha = 1;
-    this.dragging = false;
-    // set the interaction data to null
-    this.data = null;
-}
-
-function onDragMove() {
-    if (this.dragging) {
-        var newPosition = this.data.getLocalPosition(this.parent);
-        this.x = newPosition.x;
-        this.y = newPosition.y;
-    }
-}
