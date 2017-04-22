@@ -121,7 +121,7 @@ function Taiga(){
   this.app = new PIXI.Application(
     this.screenWidth,
     this.screenHeight,
-    {backgroundColor : 0x00ffff});
+    {backgroundColor : 0x000000});
   $("body").prepend(this.app.view);
 
   this.objectContainer = [];
