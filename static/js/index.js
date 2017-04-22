@@ -13,10 +13,80 @@ function TaiVec2DAdd( vec0, vec1 ){
     vec0.y + vec1.y );
 }
 
+function TaiVec2DCopy( dst, src ){
+  dst.x = src.x;
+  dst.y = src.y;
+}
+
+function TaiVec2DEquals( vec0, vec1 ){
+  result
+    = vec0.x == vec1.x
+    && vec0.y == vec1.y;
+  return result;
+}
+
+function TaiVec2DQuadrance( vec ){
+  var result = TaiVec2DDot( vec, vec );
+  return result;
+}
+
+function TaiVec2DLen( vec ){
+  var quadrance = TaiVec2DQuadrance( vec );
+  var result = Math.sqrt( quadrance );
+  return result;
+}
+
+function TaiVec2DDot( vec0, vec1 )
+{
+  var result
+    = vec0.x * vec1.x
+    + vec0.y * vec1.y;
+  return result;
+}
+
 function TaiVec2DScale( vec, scale ){
   return new TaiVec2D(
     vec.x * scale,
     vec.y * scale );
+}
+
+function TaiVec2DAngleBetweenRads( vec0, vec1 ){
+  var numer = TaiVec2DDot( vec0, vec1 );
+  var denom = TaiVec2DLen( vec0 ) * TaiVec2DLen( vec1 );
+  return Math.acos( numer / denom );
+}
+
+function TaiVec3DCross( u, v )
+{
+  return new TaiVec3D(
+    u.y * v.z - u.z * v.y,
+    u.z * v.x - u.x * v.z,
+    u.x * v.y - u.y * v.x );
+}
+
+function TaiVec3D( x, y, z ){
+  this.x = x;
+  this.y = y;
+  this.z = z;
+}
+
+//
+// Tai Math Helpers
+//
+
+function TaiSquare( val )
+{
+  return val * val;
+}
+
+function TaiToDegrees( radians )
+{
+  return radians * 180 / Math.PI;
+}
+
+function TaiToRads( degrees )
+{
+  return degrees * Math.PI / 180;
 }
 
 //
@@ -158,22 +228,27 @@ Taiga.prototype.CreateEntity = function(){
 }
 
 Taiga.prototype.LoadTextures = function(){
-  this.LoadTexture("planet.png");
-  this.LoadTexture("player.png");
-  this.LoadTexture("bullet.png");
-  this.LoadTexture("run0.png");
-  this.LoadTexture("run1.png");
-  this.LoadTexture("run2.png");
-  this.LoadTexture("run3.png");
-  this.LoadTexture("run4.png");
-  this.LoadTexture("enemy1.png");
-  this.LoadTexture("enemy2.png");
-  this.LoadTexture("enemy3.png");
-  this.LoadTexture("enemy4.png");
-  this.LoadTexture("enemy5.png");
-  this.LoadTexture("enemy6.png");
-  this.LoadTexture("enemy7.png");
-  this.LoadTexture("enemy8.png");
+  for( let textureName of [
+    "bullet.png",
+    "enemy1.png",
+    "enemy2.png",
+    "enemy3.png",
+    "enemy4.png",
+    "enemy5.png",
+    "enemy6.png",
+    "enemy7.png",
+    "enemy8.png",
+    "planet.png",
+    "player.png",
+    "run0.png",
+    "run1.png",
+    "run2.png",
+    "run3.png",
+    "run4.png"
+    ] )
+  {
+    this.LoadTexture( textureName );
+  }
 }
 
 Taiga.prototype.LoadTexture = function(textureName){
@@ -190,13 +265,65 @@ Taiga.prototype.CreatePlanet = function(){
 }
 
 Taiga.prototype.CreatePlayer = function(){
+  var playerData = {};
+  playerData.rotSpeed = 0;
+  playerData.targetDir = new TaiVec2D( 0, 0 );
+  playerData.targetReached = false;
+
   var texture = this.textures["player.png"];
   var drawable = this.graphics.SpawnDrawable( texture );
+
   var entity = this.CreateEntity();
   entity.AddComponent( drawable );
   entity.position.x = 0;
   entity.position.y = 0;
+  entity.playerData = playerData;
   this.objects["player"] = entity;
+
+  var playerFolder = datGUI.addFolder('player');
+  playerFolder.add(entity.position, 'x')
+    .name( "position.x" )
+    .listen();
+  playerFolder.add(entity.position, 'y')
+    .name( "position.y" )
+    .listen();
+  playerFolder.add(drawable.pixiSprite, 'rotation')
+    .step( TaiToRads( 1 ) )
+    .name( 'rotation( radians )' )
+    .listen();
+  playerFolder.add(playerData, 'rotSpeed')
+    .name( "rot speed" )
+    .listen();
+  playerFolder.add(playerData.targetDir, 'x')
+    .name( "targetDir.x" )
+    .listen();
+  playerFolder.add(playerData.targetDir, 'y')
+    .name( "targetDir.y" )
+    .listen();
+  playerFolder.add(playerData, 'targetReached')
+    .listen();
+}
+
+Taiga.prototype.ShootBullet = function(mouseX, mouseY){
+  // Calculate the bullet's starting position
+  var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
+  var sin = Math.sin(playerRotation - 1.5708);
+  var cos = Math.cos(playerRotation - 1.5708);
+  var posX = cos * 100;
+  var posY = sin * 100;
+
+  var texture = this.textures["bullet.png"];
+  var drawable = this.graphics.SpawnDrawable( texture, posX, posY );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = posX;
+  entity.position.y = posY;
+
+  var angleRadians = Math.atan2(posY - mouseY, posX - mouseX);
+  drawable.pixiSprite.rotation = angleRadians;
+
+  this.objects[`bullet${++this.bulletIndex}`] = entity;
+  this.bullets.push(`bullet${this.bulletIndex}`);
 }
 
 Taiga.prototype.ShootBullet = function(mouseX, mouseY){
@@ -262,28 +389,62 @@ Taiga.prototype.Update = function(time){
   }
 
   var player = this.objects["player"];
+  var playerData = player.playerData;
   var drawable = player.GetComponent( "Drawable" );
   var pixiSprite = drawable.pixiSprite;
 
-  if(typeof keys["a"] === "undefined" && typeof keys["d"] === "undefined"){
-    this.runningIndex = 0;
-    pixiSprite.setTexture(this.textures[`player.png`]);
+  var targetDir = new TaiVec2D( 0, 0 );
+  if( keys["ArrowLeft"] || keys[ "a" ] )
+    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( -1, 0 ) );
+  if( keys["ArrowRight"] || keys[ "d" ] )
+    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 1, 0 ) );
+  if( keys["ArrowUp"] || keys[ "w" ] )
+    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 0, -1 ) );
+  if( keys["ArrowDown"] || keys[ "s" ] )
+    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 0, 1 ) );
+
+  if( !TaiVec2DEquals( targetDir, new TaiVec2D( 0, 0 ) )
+    && !TaiVec2DEquals( targetDir, playerData.targetDir ) )
+  {
+    playerData.targetReached = false;
+    TaiVec2DCopy( playerData.targetDir, targetDir );
   }
 
-  if(keys["a"]){
-    pixiSprite.rotation -= 0.04;
-    pixiSprite.scale.x = -1;
-    pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
-    if(this.runningIndex == 5)
-      this.runningIndex = 0;
-  }else if(keys["d"]){
-    pixiSprite.rotation += 0.04;
-    pixiSprite.scale.x = 1;
-    pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
-    if(this.runningIndex == 5)
-      this.runningIndex = 0;
+  var targetDirLen = TaiVec2DLen( targetDir );
+  if( targetDirLen > 0 && !playerData.targetReached )
+  {
+    var curDir = new TaiVec2D(
+      Math.cos( pixiSprite.rotation - Math.PI / 2 ),
+      Math.sin( pixiSprite.rotation - Math.PI / 2 ) );
+
+    rads = TaiVec2DAngleBetweenRads( targetDir, curDir );
+    degs = TaiToDegrees( rads );
+    crossResult = TaiVec3DCross(
+      new TaiVec3D( curDir.x, curDir.y, 0 ),
+      new TaiVec3D( targetDir.x, targetDir.y, 0 ) );
+    var sign = crossResult.z > 0 ? 1 : -1;
+    playerData.rotSpeed = sign * 0.08;
+    playerData.targetReached =  degs < 10 ;
   }
 
+  if( Math.abs( playerData.rotSpeed ) > 0.01 )
+  {
+      pixiSprite.rotation += playerData.rotSpeed;
+      if( playerData.rotSpeed > 0 )
+        pixiSprite.scale.x = 1;
+      else
+        pixiSprite.scale.x = -1;
+      pixiSprite.setTexture(
+        this.textures[`run${this.runningIndex++}.png`]);
+      if(this.runningIndex == 5)
+        this.runningIndex = 0;
+
+      playerData.rotSpeed *= 0.9;
+  }else{
+    pixiSprite.setTexture(this.textures[ "player.png"]);
+  }
+
+  // Center the camera
   this.app.stage.position.x = this.screenWidth/2;
   this.app.stage.position.y = this.screenHeight/2;
 
@@ -295,6 +456,8 @@ Taiga.prototype.Update = function(time){
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
+var datGUI = null;
 $(document).ready(function(){
+  datGUI = new dat.GUI;
   new Taiga();
 });
