@@ -168,15 +168,22 @@ Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  if(typeof keys["ArrowRight"] === "undefined")
-    console.log("sdklfjklds");
+  if(typeof keys["ArrowRight"] === "undefined" && this.runningIndex > 0){
+    // this.runningIndex = 0;
+  }
 
   if(keys["ArrowLeft"]){
     this.objects["player"].rotation -= 0.04;
-    this.objects["player"].setTexture(this.textures["run0.png"]);
+    this.objects["player"].scale.x = -1;
+    this.objects["player"].setTexture(this.textures[`run${this.runningIndex++}.png`]);
+    if(this.runningIndex == 5)
+      this.runningIndex = 0;
   }else if(keys["ArrowRight"]){
     this.objects["player"].rotation += 0.04;
-    this.objects["player"].setTexture(this.textures["run1.png"]);
+    this.objects["player"].scale.x = 1;
+    this.objects["player"].setTexture(this.textures[`run${this.runningIndex++}.png`]);
+    if(this.runningIndex == 5)
+      this.runningIndex = 0;
   }
 
   this.app.stage.position.x = this.screenWidth/2;
