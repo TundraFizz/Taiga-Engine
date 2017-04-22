@@ -50,14 +50,14 @@ Taiga.prototype.Initialize = function(){
 
   this.LoadTextures();
   this.CreatePlanet();
-  this.CreateEnemy("enemy1.png", 0.5, -300, -300);
-  this.CreateEnemy("enemy2.png", 1.0, -500, -500);
-  this.CreateEnemy("enemy3.png", 1.5, -700, -700);
-  this.CreateEnemy("enemy4.png", 2.0, -900, -900);
-  this.CreateEnemy("enemy5.png", 2.5, -1100, -1100);
-  this.CreateEnemy("enemy6.png", 3.0, -1300, -1300);
-  this.CreateEnemy("enemy7.png", 3.5, -1500, -1500);
-  this.CreateEnemy("enemy8.png", 4.0, -1700, -1700);
+  this.CreateEnemy("enemy1.png", 0.25, -200, -200);
+  this.CreateEnemy("enemy2.png", 0.5, -350, -350);
+  this.CreateEnemy("enemy3.png", 1.0, -700, -700);
+  this.CreateEnemy("enemy4.png", 2.0, -1200, -1200);
+  this.CreateEnemy("enemy5.png", 4.0, -2500, -2500);
+  this.CreateEnemy("enemy6.png", 6.0, -4000, -4000);
+  this.CreateEnemy("enemy7.png", 8.0, -6500, -6500);
+  this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
   window.requestAnimationFrame(this.Update.bind(this));
 }
@@ -135,8 +135,8 @@ Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  this.app.stage.scale.x -= .001;
-  this.app.stage.scale.y -= .001;
+  this.app.stage.scale.x *= 0.99;
+  this.app.stage.scale.y *= 0.99;
   this.app.stage.position.x = this.screenWidth/2;
   this.app.stage.position.y = this.screenHeight/2;
 
