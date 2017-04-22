@@ -36,13 +36,15 @@ function update(){
 
 // ------------------------------------------------------------
 
-var keyContainer = {};
+var keyContainer    = {};
 var objectContainer = [];
+var screenWidth     = 800;
+var screenHeight    = 600;
 
 function Taiga(){}
 
 Taiga.prototype.Initialize = function(){
-  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  this.app = new PIXI.Application(screenWidth, screenHeight, {backgroundColor : 0x1099bb});
   $("body").prepend(this.app.view);
 
   this.LoadTextures();
@@ -64,8 +66,8 @@ Taiga.prototype.CreatePlanet = function(){
   object.scale.set(1);       // Scale
 
   // move the sprite to its designated position
-  object.x = 200;
-  object.y = 100;
+  object.x = screenWidth  / 2;
+  object.y = screenHeight / 2;
 
   // Time to setup the events
   // object
