@@ -44,8 +44,7 @@ function TaiVec2DDot( vec0, vec1 )
   return result;
 }
 
-function TaiVec2DScale( vec, scale )
-{
+function TaiVec2DScale( vec, scale ){
   return new TaiVec2D(
     vec.x * scale,
     vec.y * scale );
@@ -230,6 +229,7 @@ Taiga.prototype.CreateEntity = function(){
 
 Taiga.prototype.LoadTextures = function(){
   for( let textureName of [
+    "bullet.png",
     "enemy1.png",
     "enemy2.png",
     "enemy3.png",
@@ -302,6 +302,28 @@ Taiga.prototype.CreatePlayer = function(){
     .listen();
   playerFolder.add(playerData, 'targetReached')
     .listen();
+}
+
+Taiga.prototype.ShootBullet = function(mouseX, mouseY){
+  // Calculate the bullet's starting position
+  var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
+  var sin = Math.sin(playerRotation - 1.5708);
+  var cos = Math.cos(playerRotation - 1.5708);
+  var posX = cos * 100;
+  var posY = sin * 100;
+
+  var texture = this.textures["bullet.png"];
+  var drawable = this.graphics.SpawnDrawable( texture, posX, posY );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = posX;
+  entity.position.y = posY;
+
+  var angleRadians = Math.atan2(posY - mouseY, posX - mouseX);
+  drawable.pixiSprite.rotation = angleRadians;
+
+  this.objects[`bullet${++this.bulletIndex}`] = entity;
+  this.bullets.push(`bullet${this.bulletIndex}`);
 }
 
 Taiga.prototype.ShootBullet = function(mouseX, mouseY){
@@ -401,7 +423,7 @@ Taiga.prototype.Update = function(time){
       new TaiVec3D( curDir.x, curDir.y, 0 ),
       new TaiVec3D( targetDir.x, targetDir.y, 0 ) );
     var sign = crossResult.z > 0 ? 1 : -1;
-    playerData.rotSpeed = sign * 0.04;
+    playerData.rotSpeed = sign * 0.08;
     playerData.targetReached =  degs < 10 ;
   }
 
