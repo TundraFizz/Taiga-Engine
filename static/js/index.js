@@ -214,7 +214,7 @@ Taiga.prototype.ShootBullet = function(mouseX, mouseY){
   entity.position.x = posX;
   entity.position.y = posY;
 
-  var angleRadians = Math.atan2(posX - mouseY, posY - mouseX);
+  var angleRadians = Math.atan2(posY - mouseY, posX - mouseX);
   drawable.pixiSprite.rotation = angleRadians;
 
   this.objects[`bullet${++this.bulletIndex}`] = entity;
