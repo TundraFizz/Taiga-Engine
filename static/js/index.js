@@ -423,8 +423,17 @@ Taiga.prototype.Update = function(time){
       new TaiVec3D( curDir.x, curDir.y, 0 ),
       new TaiVec3D( targetDir.x, targetDir.y, 0 ) );
     var sign = crossResult.z > 0 ? 1 : -1;
-    playerData.rotSpeed = sign * 0.08;
-    playerData.targetReached =  degs < 10 ;
+    var maxSpeed = 0.08;
+    var closeEnoughDegs = 5;
+    if( degs < closeEnoughDegs )
+    {
+      playerData.rotSpeed = 0;
+      playerData.targetReached = true;
+    }
+    else
+    {
+      playerData.rotSpeed = sign * maxSpeed;
+    }
   }
 
   if( Math.abs( playerData.rotSpeed ) > 0.01 )
@@ -438,7 +447,6 @@ Taiga.prototype.Update = function(time){
         this.textures[`run${this.runningIndex++}.png`]);
       if(this.runningIndex == 5)
         this.runningIndex = 0;
-
       playerData.rotSpeed *= 0.9;
   }else{
     pixiSprite.setTexture(this.textures[ "player.png"]);
