@@ -1,93 +1,143 @@
-function PIXIPointAdd( point0, point1 )
-{
-  return new PIXI.Point(
-    point0.x + point1.x,
-    point0.y + point1.y );
+//
+// TaiVec2D
+//
+
+function TaiVec2D(){}
+TaiVec2D.prototype.constructor = function( x, y ){
+  this.x = x;
+  this.y = y;
 }
 
-function PIXIPointScale( point, scale )
-{
-  return new PIXI.Point(
-    point.x * scale,
-    point.y * scale );
+function TaiVec2DAdd( vec0, vec1 ){
+  return new TaiVec2D(
+    vec0.x + vec1.x,
+    vec0.y + vec1.y );
 }
 
-var TaiScene = function( stage )
+function TaiVec2DScale( vec, scale )
 {
-  this.stage = stage;
-  this.entities = [];
-  this.lastMsec = performance.now();
-  this.CreateEntity = function( position, velocity, texture )
-  {
-    sprite = new PIXI.Sprite( texture );
-    sprite.position = position;
-    stage.addChild( sprite );
+  return new TaiVec2D(
+    vec.x * scale,
+    vec.y * scale );
+}
 
-    entity = new TaiEntity();
-    entity.sprite = sprite;
-    entity.velocity = velocity;
+//
+// Tai Math <--> PIXI Math interface
+//
 
-    this.entities.push( entity );
-    return entity;
+function TaiVec2DToPixiPoint( taiVec )
+{
+  return new PIXI.Point( taiVec.x, taiVec.y );
+}
+
+//
+// TaiGraphics
+//
+
+function TaiGraphics(){}
+
+TaiGraphics.prototype.constructor = function( pixiStage, pixiRenderer ){
+  this.drawables = [];
+  this.pixiStage = pixiStage;
+  this.pixiRenderer = pixiRenderer;
+}
+
+TaiGraphics.prototype.SpawnDrawable = function( pixiTexture ){
+  var drawable = new TaiDrawable( this.pixiStage, pixiTexture );
+  this.drawables.push( drawable );
+  return drawable;
+}
+
+TaiGraphics.prototype.Update = function(){
+  // TODO: Compute the pixel coordinates based on
+  // - camera pos/orientatoin
+  // - entity's world coords
+  // ( For now, treat world coords as pixel coords )
+  for( let drawable of this.drawables ){
+    pixiSprite = drawable.pixiSprite;
+    pixiSprite.position = TaiVec2DToPixiPoint( drawable.entity.position );
   }
-  this.Frame = function()
-  {
-    var currMsec = performance.now();
-    var deltaSecs = ( currMsec - this.lastMsec ) / 1000;
-    this.lastMsec = currMsec;
-    for( let entity of this.entities )
-    {
-      entity.sprite.position = PIXIPointAdd(
-        entity.sprite.position,
-        PIXIPointScale( entity.velocity, deltaSecs ) );
-    }
-  }
 }
 
-var TaiEntity = function( texture )
-{
+//
+// TaiDrawable
+//
+
+function TaiDrawable(){}
+
+TaiDrawable.prototype.constructor = function( pixiStage, pixiTexture ){
+  var pixiSprite = new PIXI.Sprite( pixiTexture );
+  pixiSprite.position = new PIXI.Point( 0, 0 );
+  pixiSprite.anchor.set(0.5);
+  pixiStage.addChild( pixiSprite );
+  this.pixiSprite = pixiSprite;
 }
 
-var sean;
-var shawn;
-var shayn;
-var shane;
+//
+// TaiEntity
+//
 
-function init() {
-  stage = new PIXI.Container();
-  renderer = PIXI.autoDetectRenderer(
-    512,
-    384,
-    {view:document.getElementById("game-canvas")}
-  );
+function TaiEntity(){}
 
-  var farTexture = PIXI.Texture.fromImage("bg-far.png");
-  var midTexture = PIXI.Texture.fromImage("bg-mid.png");
-
-  sean = new TaiScene( stage );
-  shawn = new TaiScene( stage );
-  shayn = new TaiScene( stage );
-  shane = new TaiScene( stage );
-
-  sean.CreateEntity(
-    new PIXI.Point( 0, 0 ),
-    new PIXI.Point( 8, 0 ),
-    farTexture );
-
-  sean.CreateEntity(
-    new PIXI.Point( 0, 128 ),
-    new PIXI.Point( 38, 0 ),
-    midTexture );
-
-  requestAnimationFrame(update);
+TaiEntity.prototype.constructor = function(){
+  this.position = new TaiVec2D( 0, 0 );
+  this.components = [];
 }
 
-
-function update() {
-
-  sean.Frame();
-
-  renderer.render(stage);
-
-  requestAnimationFrame(update);
+TaiEntity.prototype.AddComponent = function( component ){
+  this.components.push( component ); 
+  component.entity = this;
 }
+
+//
+// Taiga
+//
+
+function Taiga(){}
+
+Taiga.prototype.constructor = function(){
+  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  $("body").prepend(this.app.view);
+
+  this.objectContainer = [];
+
+  // Create systems
+  this.graphics = new TaiGraphics( this.app.stage, this.app.renderer );
+
+  // Populate scene
+  this.LoadTextures();
+  this.CreateBunny();
+
+  window.requestAnimationFrame(this.Update.bind(this));
+}
+
+Taiga.prototype.Update = function(time){
+  this.delta = time - this.then;
+  this.then = time;
+  graphics.Update();
+  // console.log(this.delta);
+  window.requestAnimationFrame(this.Update.bind(this));
+}
+
+Taiga.prototype.LoadTextures = function(){
+  this.bunnyTexture = PIXI.Texture.fromImage("sprite.png");
+}
+
+Taiga.prototype.CreateEntity = function(){
+  var entity = new TaiEntity();
+  this.objectContainer.push( entity );
+  return entity;
+}
+
+Taiga.prototype.CreateBunny = function(){
+  var drawable = this.graphics.SpawnDrawable( this.bunnyTexture );
+  var bunny = this.CreateEntity();
+  bunny.AddComponent( drawable );
+  bunny.position.x = 200;
+  bunny.position.y = 100;
+}
+
+$(document).ready(function(){
+  var taiga = new Taiga();
+});
+
