@@ -36,52 +36,40 @@ function update(){
 
 // ------------------------------------------------------------
 
-var keyContainer = {};
 var objectContainer = [];
-
-$(document).keydown(function(event){
-  keyContainer[event.key] = true;
-  console.log(keyContainer);
-});
-
-$(document).keyup(function(event){
-  delete keyContainer[event.key];
-  console.log(keyContainer);
-});
+var screenWidth     = 800;
+var screenHeight    = 600;
 
 function Taiga(){}
 
 Taiga.prototype.Initialize = function(){
-  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  this.app = new PIXI.Application(screenWidth, screenHeight, {backgroundColor : 0x1099bb});
   $("body").prepend(this.app.view);
 
   this.LoadTextures();
-  this.CreateBunny();
+  this.CreatePlanet();
 
-  window.requestAnimationFrame(this.Update.bind(this));
-}
-
-Taiga.prototype.Update = function(time){
-  this.delta = time - this.then;
-  this.then = time;
-  // console.log(this.delta);
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
 Taiga.prototype.LoadTextures = function(){
   this.textures = [];
-  this.textures.push(PIXI.Texture.fromImage("sprite.png"));
+  this.textures.push(PIXI.Texture.fromImage("planet.png"));
 }
 
-Taiga.prototype.CreateBunny = function(){
-  var bunny = new PIXI.Sprite(this.textures[0]);
-  bunny.interactive = true; // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
-  bunny.buttonMode = true;  // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
-  bunny.anchor.set(0.5);    // center the bunny's anchor point
-  bunny.scale.set(1);       // make it a bit bigger, so it's easier to grab
+Taiga.prototype.CreatePlanet = function(){
+  var object = new PIXI.Sprite(this.textures[0]);
+  object.interactive = true; // Allow object to respond to mouse and touch events
+  object.buttonMode = false; // If the hand cursor appears when you mouse over
+  object.anchor.set(0.5);    // Center the anchor point
+  object.scale.set(1);       // Scale
+
+  // move the sprite to its designated position
+  object.x = 0;
+  object.y = 0;
 
   // Time to setup the events
-  // bunny
+  // object
   //     .on('pointerdown', onDragStart)
   //     .on('pointerup', onDragEnd)
   //     .on('pointerupoutside', onDragEnd)
@@ -99,16 +87,32 @@ Taiga.prototype.CreateBunny = function(){
       // .on('touchendoutside', onDragEnd)
       // .on('touchmove', onDragMove);
 
-  // move the sprite to its designated position
-  bunny.x = 200;
-  bunny.y = 100;
-  // bunny.x = x;
-  // bunny.y = y;
 
-  objectContainer.push(bunny);
+  // Add to the stage
+  objectContainer.push(object);
+  this.app.stage.addChild(object);
+}
 
-  // add it to the stage
-  this.app.stage.addChild(bunny);
+Taiga.prototype.Update = function(time){
+  this.delta = time - this.then;
+  this.then  = time;
+
+  this.app.stage.scale.x -= .001;
+  this.app.stage.scale.y -= .001;
+  this.app.stage.position.x = screenWidth/2;
+  this.app.stage.position.y = screenHeight/2;
+
+  // this.app.stage.pivot.x = -screenWidth/2;
+  // this.app.stage.pivot.y = -screenHeight/2;
+
+
+  // for(var i = 0; i < objectContainer.length; i++){
+  //   var scale = objectContainer[i].scale._x - .001;
+  //   console.log(scale);
+  //   objectContainer[i].scale.set(scale);
+  // }
+
+  window.requestAnimationFrame(this.Update.bind(this));
 }
 
 $(document).ready(function(){
@@ -183,51 +187,6 @@ function Init(){
   //       Math.floor(Math.random() * app.renderer.height)
   //   );
   // }
-}
-
-function createBunny(x, y) {
-
-    // create our little bunny friend..
-    var bunny = new PIXI.Sprite(texture);
-
-    // enable the bunny to be interactive... this will allow it to respond to mouse and touch events
-    bunny.interactive = true;
-
-    // this button mode will mean the hand cursor appears when you roll over the bunny with your mouse
-    bunny.buttonMode = true;
-
-    // center the bunny's anchor point
-    bunny.anchor.set(0.5);
-
-    // make it a bit bigger, so it's easier to grab
-    bunny.scale.set(3);
-
-    // setup events for mouse + touch using
-    // the pointer events
-    bunny
-        .on('pointerdown', onDragStart)
-        .on('pointerup', onDragEnd)
-        .on('pointerupoutside', onDragEnd)
-        .on('pointermove', onDragMove);
-
-        // For mouse-only events
-        // .on('mousedown', onDragStart)
-        // .on('mouseup', onDragEnd)
-        // .on('mouseupoutside', onDragEnd)
-        // .on('mousemove', onDragMove);
-
-        // For touch-only events
-        // .on('touchstart', onDragStart)
-        // .on('touchend', onDragEnd)
-        // .on('touchendoutside', onDragEnd)
-        // .on('touchmove', onDragMove);
-
-    // move the sprite to its designated position
-    bunny.x = x;
-    bunny.y = y;
-
-    // add it to the stage
-    app.stage.addChild(bunny);
 }
 
 function onDragStart(event) {
