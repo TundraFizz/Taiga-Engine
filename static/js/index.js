@@ -36,23 +36,8 @@ function update(){
 
 // ------------------------------------------------------------
 
-
-function Taiga(){}
-
-Taiga.prototype.Initialize = function(){
-  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
-  $("body").prepend(this.app.view);
-
-  this.LoadTextures();
-  this.CreateBunny();
-}
-
-Taiga.prototype.LoadTextures = function(){
-  this.textures = [];
-  this.textures.push(PIXI.Texture.fromImage("sprite.png"));
-}
-
 var keyContainer = {};
+var objectContainer = [];
 
 $(document).keydown(function(event){
   keyContainer[event.key] = true;
@@ -63,6 +48,30 @@ $(document).keyup(function(event){
   delete keyContainer[event.key];
   console.log(keyContainer);
 });
+
+function Taiga(){}
+
+Taiga.prototype.Initialize = function(){
+  this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
+  $("body").prepend(this.app.view);
+
+  this.LoadTextures();
+  this.CreateBunny();
+
+  window.requestAnimationFrame(this.Update.bind(this));
+}
+
+Taiga.prototype.Update = function(time){
+  this.delta = time - this.then;
+  this.then = time;
+  // console.log(this.delta);
+  window.requestAnimationFrame(this.Update.bind(this));
+}
+
+Taiga.prototype.LoadTextures = function(){
+  this.textures = [];
+  this.textures.push(PIXI.Texture.fromImage("sprite.png"));
+}
 
 Taiga.prototype.CreateBunny = function(){
   var bunny = new PIXI.Sprite(this.textures[0]);
@@ -95,6 +104,8 @@ Taiga.prototype.CreateBunny = function(){
   bunny.y = 100;
   // bunny.x = x;
   // bunny.y = y;
+
+  objectContainer.push(bunny);
 
   // add it to the stage
   this.app.stage.addChild(bunny);
@@ -155,16 +166,6 @@ function Init(){
 
   // create a texture from an image path
   var texture = PIXI.Texture.fromImage("sprite.png");
-
-
-
-
-
-
-
-
-
-
 
 
 
