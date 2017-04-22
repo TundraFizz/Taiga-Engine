@@ -13,8 +13,7 @@ function TaiVec2DAdd( vec0, vec1 ){
     vec0.y + vec1.y );
 }
 
-function TaiVec2DScale( vec, scale )
-{
+function TaiVec2DScale( vec, scale ){
   return new TaiVec2D(
     vec.x * scale,
     vec.y * scale );
@@ -99,7 +98,7 @@ TaiEntity.prototype.GetComponent = function( componentName ){
 }
 
 TaiEntity.prototype.AddComponent = function( component ){
-  this.components.push( component ); 
+  this.components.push( component );
   component.entity = this;
 }
 
@@ -108,6 +107,7 @@ TaiEntity.prototype.AddComponent = function( component ){
 //
 
 function Taiga(){
+  var self             = this;
   this.textures        = {};
   this.objectContainer = [];
   this.objects         = {};
@@ -139,6 +139,10 @@ function Taiga(){
   this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
   this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
+  $(document).mousedown(function(e){
+    self.ShootBullet();
+  });
+
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
@@ -151,6 +155,12 @@ Taiga.prototype.CreateEntity = function(){
 Taiga.prototype.LoadTextures = function(){
   this.LoadTexture("planet.png");
   this.LoadTexture("player.png");
+  this.LoadTexture("bullet.png");
+  this.LoadTexture("run0.png");
+  this.LoadTexture("run1.png");
+  this.LoadTexture("run2.png");
+  this.LoadTexture("run3.png");
+  this.LoadTexture("run4.png");
   this.LoadTexture("enemy1.png");
   this.LoadTexture("enemy2.png");
   this.LoadTexture("enemy3.png");
@@ -159,11 +169,6 @@ Taiga.prototype.LoadTextures = function(){
   this.LoadTexture("enemy6.png");
   this.LoadTexture("enemy7.png");
   this.LoadTexture("enemy8.png");
-  this.LoadTexture("run0.png");
-  this.LoadTexture("run1.png");
-  this.LoadTexture("run2.png");
-  this.LoadTexture("run3.png");
-  this.LoadTexture("run4.png");
 }
 
 Taiga.prototype.LoadTexture = function(textureName){
@@ -189,6 +194,23 @@ Taiga.prototype.CreatePlayer = function(){
   this.objects["player"] = entity;
 }
 
+Taiga.prototype.ShootBullet = function(){
+  var object = new PIXI.Sprite(this.textures["bullet.png"]);
+
+  object.interactive = false; // Allow object to respond to mouse and touch events
+  object.buttonMode  = false; // If the hand cursor appears when you mouse over
+  object.anchor.set(0.5);     // Center the anchor point
+  object.scale.set(1);        // Scale
+
+  // move the sprite to its designated position
+  object.x = this.objects["player"].x;
+  object.y = this.objects["player"].y;
+
+  this.objectContainer.push(object);
+  this.app.stage.addChild(object);
+  // this.objects["player"] = object;
+}
+
 Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
   var texture = this.textures[textureName];
   var drawable = this.graphics.SpawnDrawable( texture );
@@ -203,13 +225,14 @@ Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  if(typeof keys["ArrowRight"] === "undefined" && this.runningIndex > 0){
-    // this.runningIndex = 0;
-  }
-
   var player = this.objects["player"];
   var drawable = player.GetComponent( "Drawable" );
   var pixiSprite = drawable.pixiSprite;
+
+  if(typeof keys["ArrowLeft"] === "undefined" && typeof keys["ArrowRight"] === "undefined"){
+    this.runningIndex = 0;
+    pixiSprite.setTexture(this.textures[`player.png`]);
+  }
 
   if(keys["ArrowLeft"]){
     pixiSprite.rotation -= 0.04;
@@ -239,4 +262,3 @@ Taiga.prototype.Update = function(time){
 $(document).ready(function(){
   new Taiga();
 });
-
