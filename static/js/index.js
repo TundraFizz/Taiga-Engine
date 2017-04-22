@@ -200,19 +200,21 @@ Taiga.prototype.CreatePlayer = function(){
 }
 
 Taiga.prototype.ShootBullet = function(mouseX, mouseY){
-  var texture = this.textures["bullet.png"];
-  var drawable = this.graphics.SpawnDrawable( texture );
-  var entity = this.CreateEntity();
-  entity.AddComponent( drawable );
+  // Calculate the bullet's starting position
   var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
-  console.log(mouseX, mouseY);
   var sin = Math.sin(playerRotation - 1.5708);
   var cos = Math.cos(playerRotation - 1.5708);
-  // Calculate the bullet's starting position
-  entity.position.x = cos * 100;
-  entity.position.y = sin * 100;
+  var posX = cos * 100;
+  var posY = sin * 100;
 
-  var angleRadians = Math.atan2(entity.position.y - mouseY, entity.position.x - mouseX);
+  var texture = this.textures["bullet.png"];
+  var drawable = this.graphics.SpawnDrawable( texture, posX, posY );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.x = posX;
+  entity.position.y = posY;
+
+  var angleRadians = Math.atan2(posX - mouseY, posY - mouseX);
   drawable.pixiSprite.rotation = angleRadians;
 
   this.objects[`bullet${++this.bulletIndex}`] = entity;
