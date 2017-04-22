@@ -38,8 +38,8 @@ function TaiGraphics( pixiStage, pixiRenderer ){
   this.pixiRenderer = pixiRenderer;
 }
 
-TaiGraphics.prototype.SpawnDrawable = function( pixiTexture ){
-  var drawable = new TaiDrawable( this.pixiStage, pixiTexture );
+TaiGraphics.prototype.SpawnDrawable = function( pixiTexture, x = 0, y = 0){
+  var drawable = new TaiDrawable( this.pixiStage, pixiTexture, x, y);
   this.drawables.push( drawable );
   return drawable;
 }
@@ -59,9 +59,9 @@ TaiGraphics.prototype.Update = function(){
 // TaiDrawable
 //
 
-function TaiDrawable( pixiStage, pixiTexture ){
+function TaiDrawable( pixiStage, pixiTexture, x = 0, y = 0 ){
   var pixiSprite = new PIXI.Sprite( pixiTexture );
-  pixiSprite.position = new PIXI.Point( 0, 0 );
+  pixiSprite.position = new PIXI.Point( x, y );
   pixiSprite.interactive = false; // Allow object to respond to mouse and touch events
   pixiSprite.buttonMode  = false; // If the hand cursor appears when you mouse over
   pixiSprite.anchor.set(0.5);     // Center the anchor point
@@ -110,7 +110,9 @@ function Taiga(){
   var self             = this;
   this.textures        = {};
   this.objectContainer = [];
+  this.bullets         = [];
   this.objects         = {};
+  this.pi              = 3.14159
   this.screenWidth     = 800;
   this.screenHeight    = 600;
   this.scalar          = 1;
@@ -118,7 +120,7 @@ function Taiga(){
   this.app = new PIXI.Application(
     this.screenWidth,
     this.screenHeight,
-    {backgroundColor : 0xff8888});
+    {backgroundColor : 0x00ffff});
   $("body").prepend(this.app.view);
 
   this.objectContainer = [];
@@ -130,17 +132,19 @@ function Taiga(){
   this.LoadTextures();
   this.CreatePlanet();
   this.CreatePlayer();
-  this.CreateEnemy("enemy1.png", 0.25, -200,  -200);
-  this.CreateEnemy("enemy2.png", 0.5,  -350,  -350);
-  this.CreateEnemy("enemy3.png", 1.0,  -700,  -700);
-  this.CreateEnemy("enemy4.png", 2.0,  -1200, -1200);
-  this.CreateEnemy("enemy5.png", 4.0,  -2500, -2500);
-  this.CreateEnemy("enemy6.png", 6.0,  -4000, -4000);
-  this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
-  this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
+  // this.CreateEnemy("enemy1.png", 0.25, -200,  -200);
+  // this.CreateEnemy("enemy2.png", 0.5,  -350,  -350);
+  // this.CreateEnemy("enemy3.png", 1.0,  -700,  -700);
+  // this.CreateEnemy("enemy4.png", 2.0,  -1200, -1200);
+  // this.CreateEnemy("enemy5.png", 4.0,  -2500, -2500);
+  // this.CreateEnemy("enemy6.png", 6.0,  -4000, -4000);
+  // this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
+  // this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
   $(document).mousedown(function(e){
-    self.ShootBullet();
+    var mousePosX = e.clientX - self.screenWidth/2;
+    var mousePosY = e.clientY - self.screenHeight/2;
+    self.ShootBullet(mousePosX, mousePosY);
   });
 
   window.requestAnimationFrame(this.Update.bind(this));
@@ -194,21 +198,23 @@ Taiga.prototype.CreatePlayer = function(){
   this.objects["player"] = entity;
 }
 
-Taiga.prototype.ShootBullet = function(){
-  var object = new PIXI.Sprite(this.textures["bullet.png"]);
+Taiga.prototype.ShootBullet = function(mouseX, mouseY){
+  var texture = this.textures["bullet.png"];
+  var drawable = this.graphics.SpawnDrawable( texture );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
+  console.log(mouseX, mouseY);
+  var sin = Math.sin(playerRotation - 1.5708);
+  var cos = Math.cos(playerRotation - 1.5708);
+  // Calculate the bullet's starting position
+  entity.position.x = cos * 100;
+  entity.position.y = sin * 100;
 
-  object.interactive = false; // Allow object to respond to mouse and touch events
-  object.buttonMode  = false; // If the hand cursor appears when you mouse over
-  object.anchor.set(0.5);     // Center the anchor point
-  object.scale.set(1);        // Scale
+  var angleRadians = Math.atan2(entity.position.y - mouseY, entity.position.x - mouseX);
+  drawable.pixiSprite.rotation = angleRadians;
 
-  // move the sprite to its designated position
-  object.x = this.objects["player"].x;
-  object.y = this.objects["player"].y;
-
-  this.objectContainer.push(object);
-  this.app.stage.addChild(object);
-  // this.objects["player"] = object;
+  this.bullets.push(entity);
 }
 
 Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
@@ -229,18 +235,32 @@ Taiga.prototype.Update = function(time){
   var drawable = player.GetComponent( "Drawable" );
   var pixiSprite = drawable.pixiSprite;
 
-  if(typeof keys["ArrowLeft"] === "undefined" && typeof keys["ArrowRight"] === "undefined"){
+  if(typeof keys["z"] !== "undefined"){
+    console.log(this.objectContainer);
+  }
+  if(typeof keys["x"] !== "undefined"){
+    console.log(this.objects);
+  }
+
+  // Bullet logic
+  // for(var i = 0; i < this.bullets.length; i++){
+  //   var bullet = this.bullets[i];
+  //   bullet.position.x += 2;
+  //   bullet.position.y += 1;
+  // }
+
+  if(typeof keys["a"] === "undefined" && typeof keys["d"] === "undefined"){
     this.runningIndex = 0;
     pixiSprite.setTexture(this.textures[`player.png`]);
   }
 
-  if(keys["ArrowLeft"]){
+  if(keys["a"]){
     pixiSprite.rotation -= 0.04;
     pixiSprite.scale.x = -1;
     pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
     if(this.runningIndex == 5)
       this.runningIndex = 0;
-  }else if(keys["ArrowRight"]){
+  }else if(keys["d"]){
     pixiSprite.rotation += 0.04;
     pixiSprite.scale.x = 1;
     pixiSprite.setTexture(this.textures[`run${this.runningIndex++}.png`]);
