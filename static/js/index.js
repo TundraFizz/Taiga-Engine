@@ -267,8 +267,6 @@ Taiga.prototype.CreatePlanet = function(){
 Taiga.prototype.CreatePlayer = function(){
   var playerData = {};
   playerData.rotSpeed = 0;
-  playerData.targetDir = new TaiVec2D( 0, 0 );
-  playerData.targetReached = false;
 
   var texture = this.textures["player.png"];
   var drawable = this.graphics.SpawnDrawable( texture );
@@ -293,14 +291,6 @@ Taiga.prototype.CreatePlayer = function(){
     .listen();
   playerFolder.add(playerData, 'rotSpeed')
     .name( "rot speed" )
-    .listen();
-  playerFolder.add(playerData.targetDir, 'x')
-    .name( "targetDir.x" )
-    .listen();
-  playerFolder.add(playerData.targetDir, 'y')
-    .name( "targetDir.y" )
-    .listen();
-  playerFolder.add(playerData, 'targetReached')
     .listen();
 }
 
@@ -393,39 +383,16 @@ Taiga.prototype.Update = function(time){
   var drawable = player.GetComponent( "Drawable" );
   var pixiSprite = drawable.pixiSprite;
 
+  var targetRotSign = 0;
+
   var targetDir = new TaiVec2D( 0, 0 );
   if( keys["ArrowLeft"] || keys[ "a" ] )
-    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( -1, 0 ) );
+    targetRotSign -= 1;
   if( keys["ArrowRight"] || keys[ "d" ] )
-    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 1, 0 ) );
-  if( keys["ArrowUp"] || keys[ "w" ] )
-    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 0, -1 ) );
-  if( keys["ArrowDown"] || keys[ "s" ] )
-    targetDir = TaiVec2DAdd( targetDir, new TaiVec2D( 0, 1 ) );
+    targetRotSign += 1;
 
-  if( !TaiVec2DEquals( targetDir, new TaiVec2D( 0, 0 ) )
-    && !TaiVec2DEquals( targetDir, playerData.targetDir ) )
-  {
-    playerData.targetReached = false;
-    TaiVec2DCopy( playerData.targetDir, targetDir );
-  }
-
-  var targetDirLen = TaiVec2DLen( targetDir );
-  if( targetDirLen > 0 && !playerData.targetReached )
-  {
-    var curDir = new TaiVec2D(
-      Math.cos( pixiSprite.rotation - Math.PI / 2 ),
-      Math.sin( pixiSprite.rotation - Math.PI / 2 ) );
-
-    rads = TaiVec2DAngleBetweenRads( targetDir, curDir );
-    degs = TaiToDegrees( rads );
-    crossResult = TaiVec3DCross(
-      new TaiVec3D( curDir.x, curDir.y, 0 ),
-      new TaiVec3D( targetDir.x, targetDir.y, 0 ) );
-    var sign = crossResult.z > 0 ? 1 : -1;
-    playerData.rotSpeed = sign * 0.08;
-    playerData.targetReached =  degs < 10 ;
-  }
+  if( targetRotSign )
+    playerData.rotSpeed = targetRotSign * 0.08;
 
   if( Math.abs( playerData.rotSpeed ) > 0.01 )
   {
@@ -438,8 +405,7 @@ Taiga.prototype.Update = function(time){
         this.textures[`run${this.runningIndex++}.png`]);
       if(this.runningIndex == 5)
         this.runningIndex = 0;
-
-      playerData.rotSpeed *= 0.9;
+      playerData.rotSpeed *= 0.8;
   }else{
     pixiSprite.setTexture(this.textures[ "player.png"]);
   }
