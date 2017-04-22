@@ -13,8 +13,7 @@ function TaiVec2DAdd( vec0, vec1 ){
     vec0.y + vec1.y );
 }
 
-function TaiVec2DScale( vec, scale )
-{
+function TaiVec2DScale( vec, scale ){
   return new TaiVec2D(
     vec.x * scale,
     vec.y * scale );
@@ -99,19 +98,16 @@ TaiEntity.prototype.GetComponent = function( componentName ){
 }
 
 TaiEntity.prototype.AddComponent = function( component ){
-  this.components.push( component ); 
+  this.components.push( component );
   component.entity = this;
 }
-
-
-Taiga.prototype.Initialize = function(){
-  var self             = this;
 
 //
 // Taiga
 //
 
 function Taiga(){
+  var self             = this;
   this.textures        = {};
   this.objectContainer = [];
   this.objects         = {};
@@ -198,7 +194,6 @@ Taiga.prototype.CreatePlayer = function(){
   this.objects["player"] = entity;
 }
 
-<<<<<<<
 Taiga.prototype.ShootBullet = function(){
   var object = new PIXI.Sprite(this.textures["bullet.png"]);
 
@@ -216,20 +211,6 @@ Taiga.prototype.ShootBullet = function(){
   // this.objects["player"] = object;
 }
 
-Taiga.prototype.CreateEnemy = function(tex, scale, x, y){
-  // var object = new PIXI.Sprite(this.textures["planet.png"]);
-  var object = new PIXI.Sprite(this.textures[tex]);
-  object.anchor.set(0.5);    // Center the anchor point
-  object.scale.set(scale);   // Scale
-
-  // move the sprite to its designated position
-  object.x = x;
-  object.y = y;
-
-  // Add to the stage
-  this.objectContainer.push(object);
-  this.app.stage.addChild(object);
-=======
 Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
   var texture = this.textures[textureName];
   var drawable = this.graphics.SpawnDrawable( texture );
@@ -238,21 +219,20 @@ Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
   entity.position.x = x;
   entity.position.y = y;
   drawable.pixiSprite.scale.set( scale );
->>>>>>>
 }
 
 Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  if(typeof keys["ArrowLeft"] === "undefined" && typeof keys["ArrowRight"] === "undefined"){
-    this.runningIndex = 0;
-    this.objects["player"].setTexture(this.textures[`player.png`]);
-  }
-
   var player = this.objects["player"];
   var drawable = player.GetComponent( "Drawable" );
   var pixiSprite = drawable.pixiSprite;
+
+  if(typeof keys["ArrowLeft"] === "undefined" && typeof keys["ArrowRight"] === "undefined"){
+    this.runningIndex = 0;
+    pixiSprite.setTexture(this.textures[`player.png`]);
+  }
 
   if(keys["ArrowLeft"]){
     pixiSprite.rotation -= 0.04;
