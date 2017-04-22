@@ -2,8 +2,7 @@
 // TaiVec2D
 //
 
-function TaiVec2D(){}
-TaiVec2D.prototype.constructor = function( x, y ){
+function TaiVec2D( x, y ){
   this.x = x;
   this.y = y;
 }
@@ -34,9 +33,7 @@ function TaiVec2DToPixiPoint( taiVec )
 // TaiGraphics
 //
 
-function TaiGraphics(){}
-
-TaiGraphics.prototype.constructor = function( pixiStage, pixiRenderer ){
+function TaiGraphics( pixiStage, pixiRenderer ){
   this.drawables = [];
   this.pixiStage = pixiStage;
   this.pixiRenderer = pixiRenderer;
@@ -63,9 +60,7 @@ TaiGraphics.prototype.Update = function(){
 // TaiDrawable
 //
 
-function TaiDrawable(){}
-
-TaiDrawable.prototype.constructor = function( pixiStage, pixiTexture ){
+function TaiDrawable( pixiStage, pixiTexture ){
   var pixiSprite = new PIXI.Sprite( pixiTexture );
   pixiSprite.position = new PIXI.Point( 0, 0 );
   pixiSprite.anchor.set(0.5);
@@ -77,9 +72,7 @@ TaiDrawable.prototype.constructor = function( pixiStage, pixiTexture ){
 // TaiEntity
 //
 
-function TaiEntity(){}
-
-TaiEntity.prototype.constructor = function(){
+function TaiEntity(){
   this.position = new TaiVec2D( 0, 0 );
   this.components = [];
 }
@@ -93,9 +86,7 @@ TaiEntity.prototype.AddComponent = function( component ){
 // Taiga
 //
 
-function Taiga(){}
-
-Taiga.prototype.constructor = function(){
+function Taiga(){
   this.app = new PIXI.Application(800, 600, {backgroundColor : 0x1099bb});
   $("body").prepend(this.app.view);
 
@@ -114,7 +105,7 @@ Taiga.prototype.constructor = function(){
 Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then = time;
-  graphics.Update();
+  this.graphics.Update();
   // console.log(this.delta);
   window.requestAnimationFrame(this.Update.bind(this));
 }
@@ -138,6 +129,6 @@ Taiga.prototype.CreateBunny = function(){
 }
 
 $(document).ready(function(){
-  var taiga = new Taiga();
+  new Taiga();
 });
 
