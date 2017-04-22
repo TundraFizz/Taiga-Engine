@@ -36,7 +36,6 @@ function update(){
 
 // ------------------------------------------------------------
 
-var keyContainer    = {};
 var objectContainer = [];
 var screenWidth     = 800;
 var screenHeight    = 600;
@@ -66,8 +65,8 @@ Taiga.prototype.CreatePlanet = function(){
   object.scale.set(1);       // Scale
 
   // move the sprite to its designated position
-  object.x = screenWidth  / 2;
-  object.y = screenHeight / 2;
+  object.x = 0;
+  object.y = 0;
 
   // Time to setup the events
   // object
@@ -97,6 +96,22 @@ Taiga.prototype.CreatePlanet = function(){
 Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
+
+  this.app.stage.scale.x -= .001;
+  this.app.stage.scale.y -= .001;
+  this.app.stage.position.x = screenWidth/2;
+  this.app.stage.position.y = screenHeight/2;
+
+  // this.app.stage.pivot.x = -screenWidth/2;
+  // this.app.stage.pivot.y = -screenHeight/2;
+
+
+  // for(var i = 0; i < objectContainer.length; i++){
+  //   var scale = objectContainer[i].scale._x - .001;
+  //   console.log(scale);
+  //   objectContainer[i].scale.set(scale);
+  // }
+
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
