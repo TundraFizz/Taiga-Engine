@@ -110,8 +110,9 @@ function Taiga(){
   var self             = this;
   this.textures        = {};
   this.objectContainer = [];
-  this.bullets         = [];
   this.objects         = {};
+  this.bullets         = [];
+  this.bulletIndex     = 0;
   this.pi              = 3.14159
   this.screenWidth     = 800;
   this.screenHeight    = 600;
@@ -214,7 +215,8 @@ Taiga.prototype.ShootBullet = function(mouseX, mouseY){
   var angleRadians = Math.atan2(entity.position.y - mouseY, entity.position.x - mouseX);
   drawable.pixiSprite.rotation = angleRadians;
 
-  this.bullets.push(entity);
+  this.objects[`bullet${++this.bulletIndex}`] = entity;
+  this.bullets.push(`bullet${this.bulletIndex}`);
 }
 
 Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
@@ -231,23 +233,35 @@ Taiga.prototype.Update = function(time){
   this.delta = time - this.then;
   this.then  = time;
 
-  var player = this.objects["player"];
-  var drawable = player.GetComponent( "Drawable" );
-  var pixiSprite = drawable.pixiSprite;
-
   if(typeof keys["z"] !== "undefined"){
-    console.log(this.objectContainer);
+    // console.log(this.objectContainer);
+    // console.log(this.bullets[0]);
+    // console.log(this.objects);
+    // console.log(this.bullets);
+
+    // var bulletObjName = this.bullets[0];
+    // var bullet = this.objects[bulletObjName];
+    // // bullet.position.x += 10;
+    // // console.log(bullet);
+    // // console.log();
+    // bullet.GetComponent( "Drawable" ).pixiSprite.rotation += 1;
   }
   if(typeof keys["x"] !== "undefined"){
-    console.log(this.objects);
+    // console.log(this.objects);
   }
 
   // Bullet logic
-  // for(var i = 0; i < this.bullets.length; i++){
-  //   var bullet = this.bullets[i];
-  //   bullet.position.x += 2;
-  //   bullet.position.y += 1;
-  // }
+  for(var i = 0; i < this.bullets.length; i++){
+    var bulletObjName = this.bullets[i];
+    var bullet = this.objects[bulletObjName];
+    var rotation = bullet.GetComponent( "Drawable" ).pixiSprite.rotation;
+    bullet.position.x -= (Math.cos(rotation) * 5);
+    bullet.position.y -= (Math.sin(rotation) * 5);
+  }
+
+  var player = this.objects["player"];
+  var drawable = player.GetComponent( "Drawable" );
+  var pixiSprite = drawable.pixiSprite;
 
   if(typeof keys["a"] === "undefined" && typeof keys["d"] === "undefined"){
     this.runningIndex = 0;
