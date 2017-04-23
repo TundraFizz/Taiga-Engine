@@ -30,21 +30,29 @@ TaiVec2D.prototype.Equals = function( vec ){
 }
 
 TaiVec2D.prototype.Quadrance = function(){
-  var result = this.dot( this );
+  var result = this.Dot( this );
   return result;
 }
 
 TaiVec2D.prototype.Len = function(){
-  var quadrance = this.quadrance();
+  var quadrance = this.Quadrance();
   var result = Math.sqrt( quadrance );
   return result;
 }
 
 TaiVec2D.prototype.Dot = function( vec ){
   var result
-    = this.x * vec1.x
-    + this.y * vec1.y;
+    = this.x * vec.x
+    + this.y * vec.y;
   return result;
+}
+
+TaiVec2D.prototype.RotateTowardsRads = function( vec, maxAngleRads )
+{
+  angleRads
+    = Math.min( this.AngleBetweenRads( vec ), maxAngleRads )
+    * this.RotateDirection( vec );
+  this.RotateRads( angleRads );
 }
 
 TaiVec2D.prototype.RotateRads = function( angleRads ) {
@@ -67,6 +75,12 @@ TaiVec2D.prototype.AngleBetweenRads = function( vec ){
   var numer = this.Dot( vec );
   var denom = this.Len() * vec.Len();
   return Math.acos( numer / denom );
+}
+
+TaiVec2D.prototype.RotateDirection = function( vec ){
+  var crossZ = this.x * vec.y - this.y * vec.x;
+  var result = crossZ > 0 ? 1 : -1;
+  return result;
 }
 
 function TaiVec3DCross( u, v ) {
