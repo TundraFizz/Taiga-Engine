@@ -146,6 +146,9 @@ function Taiga(){
   this.bullets         = [];
   this.goldfishes      = [];
   this.bulletIndex     = 0;
+  this.enemies         = [];
+  this.enemyIndex      = 0;
+  this.pi              = 3.14159
   this.screenWidth     = 800;
   this.screenHeight    = 600;
   this.scalar          = 1;
@@ -165,6 +168,7 @@ function Taiga(){
   this.LoadTextures();
   this.CreatePlanet();
   this.CreatePlayer();
+  this.CreateEnemy("enemy0.png", 1, -200, -200);
 
   this.CreateGoldfish( new TaiVec2D( -100, 300 ), new TaiVec2D( 0, -1 ) );
   this.CreateGoldfish( new TaiVec2D( -50, 320 ), new TaiVec2D( 0, -1 ) );
@@ -203,14 +207,8 @@ Taiga.prototype.CreateEntity = function(){
 Taiga.prototype.LoadTextures = function(){
   for( let textureName of [
     "bullet.png",
-    "enemy1.png",
+    "enemy0.png",
     "enemy_goldfish.png",
-    "enemy3.png",
-    "enemy4.png",
-    "enemy5.png",
-    "enemy6.png",
-    "enemy7.png",
-    "enemy8.png",
     "planet.png",
     "player.png",
     "run0.png",
@@ -319,6 +317,16 @@ Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
   entity.position.x = x;
   entity.position.y = y;
   drawable.pixiSprite.scale.set( scale );
+
+  this.objects[`enemy${++this.enemyIndex}`] = entity;
+  this.enemies.push(`enemy${this.enemyIndex}`);
+}
+
+Taiga.prototype.CheckCircleToCircleCollision = function(x1, y1, r1, x2, y2, r2) {
+  var dx = x1 - x2;
+  var dy = y1 - y2;
+  var distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < r1 + r2;
 }
 
 Taiga.prototype.Update = function(time){
@@ -332,8 +340,11 @@ Taiga.prototype.Update = function(time){
     // console.log(this.objects);
     // console.log(this.bullets);
 
-    // var bulletObjName = this.bullets[0];
-    // var bullet = this.objects[bulletObjName];
+    var bulletObjName = this.bullets[0];
+    var bullet = this.objects[bulletObjName].GetComponent( "Drawable" ).pixiSprite;
+    console.log(bullet.x);
+    console.log(bullet.y);
+    console.log(bullet.width);
     // // bullet.position.x += 10;
     // // console.log(bullet);
     // // console.log();
@@ -348,8 +359,23 @@ Taiga.prototype.Update = function(time){
     var bulletObjName = this.bullets[i];
     var bullet = this.objects[bulletObjName];
     var rotation = bullet.GetComponent( "Drawable" ).pixiSprite.rotation;
+    var radius   = bullet.GetComponent( "Drawable" ).pixiSprite.width / 2;
+
+    // Update bullet position
     bullet.position.x -= (Math.cos(rotation) * 5);
     bullet.position.y -= (Math.sin(rotation) * 5);
+
+    // Check for collisions between player bullets and enemies
+    for(var j = 0; j < this.enemies.length; j++){
+      var enemyObjName = this.enemies[j];
+      var enemy = this.objects[enemyObjName];
+      var enemyRadius = enemy.GetComponent( "Drawable" ).pixiSprite.width / 2;
+      if(this.CheckCircleToCircleCollision(bullet.position.x, bullet.position.y, radius, enemy.position.x, enemy.position.y, enemyRadius)){
+        delete this.objects[bulletObjName];
+        this.bullets.splice(i--, 1);
+        break;
+      }
+    }
   }
 
   var player = this.objects["player"];
