@@ -1,104 +1,4 @@
 //
-// TaiVec2D
-//
-
-function TaiVec2D( x, y ){
-  this.x = x;
-  this.y = y;
-}
-
-function TaiVec2DAdd( vec0, vec1 ){
-  return new TaiVec2D(
-    vec0.x + vec1.x,
-    vec0.y + vec1.y );
-}
-
-function TaiVec2DCopy( dst, src ){
-  dst.x = src.x;
-  dst.y = src.y;
-}
-
-function TaiVec2DEquals( vec0, vec1 ){
-  result
-    = vec0.x == vec1.x
-    && vec0.y == vec1.y;
-  return result;
-}
-
-function TaiVec2DQuadrance( vec ){
-  var result = TaiVec2DDot( vec, vec );
-  return result;
-}
-
-function TaiVec2DLen( vec ){
-  var quadrance = TaiVec2DQuadrance( vec );
-  var result = Math.sqrt( quadrance );
-  return result;
-}
-
-function TaiVec2DDot( vec0, vec1 )
-{
-  var result
-    = vec0.x * vec1.x
-    + vec0.y * vec1.y;
-  return result;
-}
-
-function TaiVec2DScale( vec, scale ){
-  return new TaiVec2D(
-    vec.x * scale,
-    vec.y * scale );
-}
-
-function TaiVec2DAngleBetweenRads( vec0, vec1 ){
-  var numer = TaiVec2DDot( vec0, vec1 );
-  var denom = TaiVec2DLen( vec0 ) * TaiVec2DLen( vec1 );
-  return Math.acos( numer / denom );
-}
-
-function TaiVec3DCross( u, v )
-{
-  return new TaiVec3D(
-    u.y * v.z - u.z * v.y,
-    u.z * v.x - u.x * v.z,
-    u.x * v.y - u.y * v.x );
-}
-
-function TaiVec3D( x, y, z ){
-  this.x = x;
-  this.y = y;
-  this.z = z;
-}
-
-//
-// Tai Math Helpers
-//
-
-function TaiSquare( val )
-{
-  return val * val;
-}
-
-function TaiToDegrees( radians )
-{
-  return radians * 180 / Math.PI;
-}
-
-function TaiToRads( degrees )
-{
-  return degrees * Math.PI / 180;
-}
-
-//
-// Tai Math <--> PIXI Math interface
-//
-
-function TaiVec2DToPixiPoint( taiVec )
-{
-  return new PIXI.Point( taiVec.x, taiVec.y );
-}
-
-//
 // TaiGraphics
 //
 
@@ -203,14 +103,6 @@ function Taiga(){
   this.LoadTextures();
   this.CreatePlanet();
   this.CreatePlayer();
-  // this.CreateEnemy("enemy1.png", 0.25, -200,  -200);
-  // this.CreateEnemy("enemy2.png", 0.5,  -350,  -350);
-  // this.CreateEnemy("enemy3.png", 1.0,  -700,  -700);
-  // this.CreateEnemy("enemy4.png", 2.0,  -1200, -1200);
-  // this.CreateEnemy("enemy5.png", 4.0,  -2500, -2500);
-  // this.CreateEnemy("enemy6.png", 6.0,  -4000, -4000);
-  // this.CreateEnemy("enemy7.png", 8.0,  -6500, -6500);
-  // this.CreateEnemy("enemy8.png", 10.0, -8000, -8000);
 
   $(document).mousedown(function(e){
     var mousePosX = e.clientX - self.screenWidth/2;
@@ -231,7 +123,7 @@ Taiga.prototype.LoadTextures = function(){
   for( let textureName of [
     "bullet.png",
     "enemy1.png",
-    "enemy2.png",
+    "enemy_goldfish.png",
     "enemy3.png",
     "enemy4.png",
     "enemy5.png",
