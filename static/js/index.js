@@ -78,24 +78,28 @@ function TaiEnemyGoldfish( facingDir ){
 
 TaiEnemyGoldfish.prototype.Think = function(){
 
+  // swim with a sin wave
   oldSecs = this.secs;
   newSecs = performance.now() / 1000;
   difSecs = newSecs - oldSecs;
-
   oldTurn = Math.sin( oldSecs );
   newTurn = Math.sin( newSecs );
-
   difTurn = newTurn - oldTurn;
   difRads = this.turnAngleRads * difTurn;
-
   this.facingDir.RotateRads( difRads );
   var swimVec = new TaiVec2D( 0, 0 );
   swimVec.Copy( this.facingDir );
   swimVec.Scale( this.swimSpeedPxPerSec * difSecs );
   this.entity.position.Add( swimVec );
-  // this.entity.position.Scale( 0.99 );
   this.secs = newSecs;
 
+  // swim towards the player
+  var toPlayer = new TaiVec2D( 0, 0 );
+  toPlayer.Copy( this.entity.position );
+  toPlayer.Scale( -1 );
+  this.facingDir.RotateTowardsRads( toPlayer, TaiToRads( 0.3 ) );
+
+  // debug draw facing dir
   lineEnd = new TaiVec2D( 0, 0 );
   lineEnd.Add( this.facingDir );
   lineEnd.Scale( 50 );
