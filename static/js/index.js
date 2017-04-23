@@ -14,9 +14,32 @@ TaiGraphics.prototype.SpawnDrawable = function( pixiTexture, x = 0, y = 0){
   return drawable;
 }
 
+TaiGraphics.prototype.OnFrameBegin = function(){
+  if( this.perFrameDraw != null )
+  {
+    this.pixiStage.removeChild( this.perFrameDraw );
+    this.perFrameDraw.destroy();
+  }
+  this.perFrameDraw = new PIXI.Graphics();
+  this.pixiStage.addChild( this.perFrameDraw );
+}
+
+TaiGraphics.prototype.DrawCircle = function( position, rad ){
+  perFrameDraw.beginFill(0x9966FF);
+  perFrameDraw.drawCircle( position.x, pos.y, rad );
+  perFrameDraw.endFill();
+}
+
+TaiGraphics.prototype.DrawLine = function( vec0, vec1 ){
+  this.perFrameDraw
+    .lineStyle(4, 0xFFFFFF, 1)
+    .moveTo( vec0.x, vec0.y )
+    .lineTo( vec1.x, vec1.y );
+}
+
 TaiGraphics.prototype.Update = function(){
   // TODO: Compute the pixel coordinates based on
-  // - camera pos/orientatoin
+  // - camera position/orientatoin
   // - entity's world coords
   // ( For now, treat world coords as pixel coords )
   for( let drawable of this.drawables ){
@@ -39,6 +62,45 @@ function TaiDrawable( pixiStage, pixiTexture, x = 0, y = 0 ){
   pixiStage.addChild( pixiSprite );
   this.pixiSprite = pixiSprite;
   this.componentName = "Drawable";
+}
+
+//
+// TaiEnemyGoldfish
+//
+
+function TaiEnemyGoldfish( facingDir ){
+  this.facingDir = facingDir;
+  this.swimSpeedPxPerSec = 50 + Math.random() * 10;
+  this.turnAngleRads = TaiToRads( 45 );
+  this.secs = performance.now() / 1000 + Math.random() * 20;
+  this.componentName = "Goldfish";
+}
+
+TaiEnemyGoldfish.prototype.Think = function(){
+
+  oldSecs = this.secs;
+  newSecs = performance.now() / 1000;
+  difSecs = newSecs - oldSecs;
+
+  oldTurn = Math.sin( oldSecs );
+  newTurn = Math.sin( newSecs );
+
+  difTurn = newTurn - oldTurn;
+  difRads = this.turnAngleRads * difTurn;
+
+  this.facingDir.RotateRads( difRads );
+  var swimVec = new TaiVec2D( 0, 0 );
+  swimVec.Copy( this.facingDir );
+  swimVec.Scale( this.swimSpeedPxPerSec * difSecs );
+  this.entity.position.Add( swimVec );
+  // this.entity.position.Scale( 0.99 );
+  this.secs = newSecs;
+
+  lineEnd = new TaiVec2D( 0, 0 );
+  lineEnd.Add( this.facingDir );
+  lineEnd.Scale( 50 );
+  lineEnd.Add( this.entity.position );
+  this.entity.taiga.graphics.DrawLine( this.entity.position, lineEnd );
 }
 
 //
@@ -82,8 +144,8 @@ function Taiga(){
   this.objectContainer = [];
   this.objects         = {};
   this.bullets         = [];
+  this.goldfishes      = [];
   this.bulletIndex     = 0;
-  this.pi              = 3.14159
   this.screenWidth     = 800;
   this.screenHeight    = 600;
   this.scalar          = 1;
@@ -104,6 +166,13 @@ function Taiga(){
   this.CreatePlanet();
   this.CreatePlayer();
 
+  this.CreateGoldfish( new TaiVec2D( -100, 300 ), new TaiVec2D( 0, -1 ) );
+  this.CreateGoldfish( new TaiVec2D( -50, 320 ), new TaiVec2D( 0, -1 ) );
+  this.CreateGoldfish( new TaiVec2D( 0, 340 ), new TaiVec2D( 0, -1 ) );
+  this.CreateGoldfish( new TaiVec2D( 50, 320 ), new TaiVec2D( 0, -1 ) );
+  this.CreateGoldfish( new TaiVec2D( 100, 300 ), new TaiVec2D( 0, -1 ) );
+
+
   $(document).mousedown(function(e){
     var mousePosX = e.clientX - self.screenWidth/2;
     var mousePosY = e.clientY - self.screenHeight/2;
@@ -113,8 +182,20 @@ function Taiga(){
   window.requestAnimationFrame(this.Update.bind(this));
 }
 
+Taiga.prototype.CreateGoldfish = function( position, direction ){
+  var texture = this.textures["enemy_goldfish.png"];
+  var drawable = this.graphics.SpawnDrawable( texture );
+  var entity = this.CreateEntity();
+  entity.AddComponent( drawable );
+  entity.position.Copy( position );
+  var goldfish = new TaiEnemyGoldfish( direction );
+  entity.AddComponent( goldfish );
+  this.goldfishes.push( goldfish );
+}
+
 Taiga.prototype.CreateEntity = function(){
   var entity = new TaiEntity();
+  entity.taiga = this;
   this.objectContainer.push( entity );
   return entity;
 }
@@ -191,18 +272,18 @@ Taiga.prototype.ShootBullet = function(mouseX, mouseY){
   var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
   var sin = Math.sin(playerRotation - 1.5708);
   var cos = Math.cos(playerRotation - 1.5708);
-  var posX = cos * 100;
-  var posY = sin * 100;
+  var positionX = cos * 100;
+  var positionY = sin * 100;
 
   var texture = this.textures["bullet.png"];
-  var drawable = this.graphics.SpawnDrawable( texture, posX, posY );
+  var drawable = this.graphics.SpawnDrawable( texture, positionX, positionY );
   var entity = this.CreateEntity();
   entity.AddComponent( drawable );
-  entity.position.x = posX;
-  entity.position.y = posY;
+  entity.position.x = positionX;
+  entity.position.y = positionY;
 
-  var angleRadians = Math.atan2(posY - mouseY, posX - mouseX);
-  drawable.pixiSprite.rotation = angleRadians;
+  var angleRads = Math.atan2(positionY - mouseY, positionX - mouseX);
+  drawable.pixiSprite.rotation = angleRads;
 
   this.objects[`bullet${++this.bulletIndex}`] = entity;
   this.bullets.push(`bullet${this.bulletIndex}`);
@@ -213,18 +294,18 @@ Taiga.prototype.ShootBullet = function(mouseX, mouseY){
   var playerRotation = this.objects["player"].GetComponent( "Drawable" ).pixiSprite.rotation;
   var sin = Math.sin(playerRotation - 1.5708);
   var cos = Math.cos(playerRotation - 1.5708);
-  var posX = cos * 100;
-  var posY = sin * 100;
+  var positionX = cos * 100;
+  var positionY = sin * 100;
 
   var texture = this.textures["bullet.png"];
-  var drawable = this.graphics.SpawnDrawable( texture, posX, posY );
+  var drawable = this.graphics.SpawnDrawable( texture, positionX, positionY );
   var entity = this.CreateEntity();
   entity.AddComponent( drawable );
-  entity.position.x = posX;
-  entity.position.y = posY;
+  entity.position.x = positionX;
+  entity.position.y = positionY;
 
-  var angleRadians = Math.atan2(posY - mouseY, posX - mouseX);
-  drawable.pixiSprite.rotation = angleRadians;
+  var angleRads = Math.atan2(positionY - mouseY, positionX - mouseX);
+  drawable.pixiSprite.rotation = angleRads;
 
   this.objects[`bullet${++this.bulletIndex}`] = entity;
   this.bullets.push(`bullet${this.bulletIndex}`);
@@ -241,6 +322,7 @@ Taiga.prototype.CreateEnemy = function(textureName, scale, x, y){
 }
 
 Taiga.prototype.Update = function(time){
+  this.graphics.OnFrameBegin();
   this.delta = time - this.then;
   this.then  = time;
 
@@ -309,6 +391,10 @@ Taiga.prototype.Update = function(time){
   // Game logic
   // for(var i = 0; i < objectContainer.length; i++){
   // }
+  for( let goldfish of this.goldfishes )
+  {
+    goldfish.Think();
+  }
 
   this.graphics.Update();
   window.requestAnimationFrame(this.Update.bind(this));
