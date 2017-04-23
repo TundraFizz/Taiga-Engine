@@ -371,8 +371,10 @@ Taiga.prototype.Update = function(time){
       var enemy = this.objects[enemyObjName];
       var enemyRadius = enemy.GetComponent( "Drawable" ).pixiSprite.width / 2;
       if(this.CheckCircleToCircleCollision(bullet.position.x, bullet.position.y, radius, enemy.position.x, enemy.position.y, enemyRadius)){
-        delete this.objects[bulletObjName];
-        this.bullets.splice(i--, 1);
+        console.log(bullet);
+        bullet.GetComponent( "Drawable" ).pixiSprite.destroy();
+        // delete this.objects[bulletObjName];
+        // this.bullets.splice(i--, 1);
         break;
       }
     }
